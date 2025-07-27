@@ -1,0 +1,17 @@
+{
+  "dashboard": {
+    "title": "Wazuh MITRE ATT&CK Threats",
+    "panels": [
+      {
+        "type": "table",
+        "title": "Credential Access Attempts",
+        "search": "event_type:authentication_failure | group by src_ip, user"
+      },
+      {
+        "type": "matrix",
+        "title": "MITRE ATT&CK Mapping",
+        "search": "mitre.technique:* | stats count by mitre.id"
+      }
+    ]
+  }
+}

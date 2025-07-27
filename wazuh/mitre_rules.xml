@@ -1,0 +1,13 @@
+<!-- Example Wazuh MITRE ATT&CK mapping rule for credential access (T1003) -->
+<group name="mitre-attack">
+  <rule id="100001" level="10">
+    <decoded_as>json</decoded_as>
+    <field name="event_type">authentication_failure</field>
+    <description>Credential Access Attempt (MITRE ATT&CK T1003)</description>
+    <mitre>
+      <id>T1003</id>
+      <technique>Credential Dumping</technique>
+    </mitre>
+    <action>block</action>
+  </rule>
+</group>

@@ -1,0 +1,18 @@
+{
+  "dashboard": {
+    "title": "SOC Threat Detection Overview",
+    "panels": [
+      {
+        "type": "table",
+        "title": "Brute Force Attempts",
+        "search": "index=cloud_logs "authentication failure" | stats count by src_ip, user"
+      },
+      {
+        "type": "matrix",
+        "title": "MITRE ATT&CK Coverage",
+        "search": "index=cloud_logs | eval mitre_id=case(...)",
+        "mapping": "MITRE ATT&CK"
+      }
+    ]
+  }
+}
