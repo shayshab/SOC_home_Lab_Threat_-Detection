@@ -1,0 +1,60 @@
+{
+  "dashboard": {
+    "title": "Jira Incident Management Overview",
+    "panels": [
+      {
+        "type": "table",
+        "title": "Recent Security Incidents",
+        "search": "index=jira_incidents | table issue_key, summary, severity, status, created_time",
+        "refresh": "30s"
+      },
+      {
+        "type": "pie",
+        "title": "Incident Severity Distribution",
+        "search": "index=jira_incidents | stats count by severity",
+        "refresh": "60s"
+      },
+      {
+        "type": "bar",
+        "title": "MITRE ATT&CK Techniques by Incident",
+        "search": "index=jira_incidents mitre_technique=* | stats count by mitre_technique",
+        "refresh": "60s"
+      },
+      {
+        "type": "table",
+        "title": "Open Incidents by Status",
+        "search": "index=jira_incidents status!=\"Resolved\" | stats count by status",
+        "refresh": "30s"
+      },
+      {
+        "type": "line",
+        "title": "Incident Creation Trend",
+        "search": "index=jira_incidents | timechart span=1h count",
+        "refresh": "60s"
+      },
+      {
+        "type": "table",
+        "title": "Top Source IPs in Incidents",
+        "search": "index=jira_incidents source_ip=* | stats count by source_ip | sort -count | head 10",
+        "refresh": "60s"
+      },
+      {
+        "type": "table",
+        "title": "Recent Incident Comments",
+        "search": "index=jira_comments | table issue_key, comment_author, comment_time, comment_text | head 20",
+        "refresh": "30s"
+      },
+      {
+        "type": "gauge",
+        "title": "Average Time to Resolution",
+        "search": "index=jira_incidents status=\"Resolved\" | eval resolution_time=resolved_time-created_time | stats avg(resolution_time) as avg_resolution_time",
+        "refresh": "300s"
+      }
+    ],
+    "refresh": "30s",
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    }
+  }
+} 

@@ -1,0 +1,89 @@
+#!/bin/bash
+# Wazuh Active Response Script for Jira Integration
+# Creates Jira tickets when Wazuh detects security threats
+
+# Configuration
+JIRA_URL="${JIRA_URL:-https://your-company.atlassian.net}"
+JIRA_USERNAME="${JIRA_USERNAME:-your-email@company.com}"
+JIRA_API_TOKEN="${JIRA_API_TOKEN:-your-api-token}"
+JIRA_PROJECT_KEY="${JIRA_PROJECT_KEY:-SEC}"
+
+# Log file
+LOG_FILE="/var/ossec/logs/jira_active_response.log"
+
+# Log function
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
+}
+
+# Get alert information from Wazuh
+ALERT_ID="$1"
+RULE_ID="$2"
+RULE_LEVEL="$3"
+RULE_NAME="$4"
+SRCIP="$5"
+USER="$6"
+FILENAME="$7"
+
+log "Alert triggered: ID=$ALERT_ID, Rule=$RULE_NAME, Level=$RULE_LEVEL, Source=$SRCIP"
+
+# Determine severity based on rule level
+case $RULE_LEVEL in
+    1-5)   SEVERITY="Low" ;;
+    6-10)  SEVERITY="Medium" ;;
+    11-15) SEVERITY="High" ;;
+    *)     SEVERITY="Critical" ;;
+esac
+
+# Map rule to MITRE technique
+case $RULE_ID in
+    100001) MITRE_TECHNIQUE="T1110" ;; # Brute Force
+    100002) MITRE_TECHNIQUE="T1068" ;; # Privilege Escalation
+    100003) MITRE_TECHNIQUE="T1003" ;; # Credential Dumping
+    *)      MITRE_TECHNIQUE="" ;;
+esac
+
+# Create summary and description
+SUMMARY="Security Alert: $RULE_NAME"
+DESCRIPTION="Wazuh detected a security threat that requires investigation.
+
+**Alert Details:**
+- Rule Name: $RULE_NAME
+- Rule ID: $RULE_ID
+- Alert Level: $RULE_LEVEL
+- Source IP: $SRCIP
+- Affected User: $USER
+- File: $FILENAME
+- Detection Time: $(date '+%Y-%m-%d %H:%M:%S UTC')
+
+**Response Required:**
+- Investigate the source of this alert
+- Determine if this is a false positive or actual threat
+- Take appropriate remediation actions
+- Update detection rules if necessary"
+
+# Create Jira ticket using Python script
+if [ -f "/var/ossec/active-response/bin/jira_create_ticket.py" ]; then
+    python3 /var/ossec/active-response/bin/jira_create_ticket.py \
+        --jira-url "$JIRA_URL" \
+        --username "$JIRA_USERNAME" \
+        --api-token "$JIRA_API_TOKEN" \
+        --project-key "$JIRA_PROJECT_KEY" \
+        --summary "$SUMMARY" \
+        --description "$DESCRIPTION" \
+        --severity "$SEVERITY" \
+        --mitre-technique "$MITRE_TECHNIQUE" \
+        --source-ip "$SRCIP" \
+        --affected-user "$USER"
+    
+    if [ $? -eq 0 ]; then
+        log "Jira ticket created successfully"
+    else
+        log "Failed to create Jira ticket"
+    fi
+else
+    log "Jira integration script not found"
+fi
+
+# Exit successfully
+exit 0 
